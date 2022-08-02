@@ -1,13 +1,69 @@
-require('dotenv').config()
-require('md5')
-const express = require('express')
-const app = express()
-const PORT = 8080
+/*************************************************************************************************
+ * This file Index.js is the entry point of the application. It contains all the initialization of 
+ * variables like env, routes ,app. It also have all the configuration of Mysql and server.
+ *************************************************************************************************/
 
-const jwt = require('jsonwebtoken')
-const md5 = require('md5')
+require('dotenv').config() //loads environment variables from a .env file into process.env
+
+const express = require('express') 
+const cors = require('cors') //determines which origins are allowed to access server resources
+
+/**
+ * JWT, used for stateless authentication mechanisms for users,
+ * this means maintaining session is on the client-side 
+ * instead of storing sessions on the server
+ */
+const jwt = require('jsonwebtoken') 
+const morgan = require('morgan')
+
+
+const doctorsApi= require('./routes/doctors') //Routes for managing doctors Api
+const authApi=require('./routes/auth') //Routes for managing authentication like login/register Api
+const appointmentApi=require('./routes/appointments') //Routes for managing appointments Api
+
+
+const swaggerUI = require('swagger-ui-express') //allows you to serve swagger-ui generated API docs from express
+const swaggerJsDoc = require('swagger-jsdoc') //reads JSDoc-annotated source code and generates an OpenAPI (Swagger) specification.
+
+const PORT = process.env.PORT | 8080
+
+// configuration for @openapi (or @swagger) 
+const options = {
+	definition: {
+		openapi: "3.0.0",
+		info: {
+			title: "Clinic Rest API",
+			version: "1.0.0",
+			description: "Clinic Scheduling Rest API",
+		},
+		servers: [
+			{
+				url: "http://localhost:8080", //web server running
+			},
+		],
+	},
+	apis: ["./routes/*.js"], //path to file containing @swagger annotations
+};
+
+const specs = swaggerJsDoc(options); //specs will be swagger specification.
+
+const app = express();
+
+app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(specs)); //setting up server where the swagger documentation will live
+
+//initializing app to be used in the web
+app.use(cors())
 app.use(express.json())
+app.use(morgan('dev'))
+app.use('/doctors',doctorsApi)
+app.use('/appointments',appointmentApi)
+app.use('',authApi)
 
+/**
+ * @desc Knex is a query builder for mysql in nodeJs
+ * 
+ * Configuration of MySql database using knex 
+ */
 const knex = require('knex')({
     client: 'mysql2',
     connection: {
@@ -18,99 +74,9 @@ const knex = require('knex')({
       database : 'clinic_scheduling_db'
     }
   });
+app.knex=knex
 
-const authenticateToken = (req,res,next) => {
-    const authHeader = req.headers['authorization']
-    const token = authHeader && authHeader.split(' ')[1]
-    if(!token) return res.sendStatus(401)
-    jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(err,email) => {
-        if(err) return res.sendStatus(403)
-        res.authenticatedEmail = email
-        next()
-    })
-}
-
-const generateAccessToken = email => {
-    return jwt.sign(email,process.env.ACCESS_TOKEN_SECRET,{expiresIn:'10m'})
-}
-
-const generateRefreshToken = email => {
-    return jwt.sign(email,process.env.REFRESH_TOKEN)
-}
-
-const refreshTokens = []
-app.post('/token', (req,res) => {
-    const { refreshToken } = req.body
-    if(!refreshToken) return res.sendStatus(401)
-    if(!refreshTokens.includes(refreshToken)) return res.sendStatus(403)
-    jwt.verify(refreshToken,process.env.REFRESH_TOKEN, (err,email) => {
-        if(err) return res.sendStatus(403)
-        const accessToken = generateAccessToken({email:'email.email'})
-        res.json({accessToken})
-    })
-})
-
-app.post('/register',(req,res) => {
-    const {name, email, password, phone_no, role_id} = req.body
-
-    knex('users').select('id').where({
-        email
-    }).first().then(user => {
-        if(user) {
-            res.status(409).send({error:"user already exists"})
-        } else {
-            console.log('working')
-            knex('users').insert({
-                name,
-                email,
-                password:md5(password),
-                role_id,
-                phone_no
-            },['id','name','email','role_id']).then((user) => {
-                if(user) {
-                    const accessToken = generateAccessToken({email:user.email})
-                    const refreshToken = generateRefreshToken({email:user.email})
-                    res.status(200).send({accessToken,refreshToken,user,message:"successfully registered"})
-                } else {
-                    res.status(500).send({error:'unable to register'})
-                }
-            })
-        }
-    })
-})
-
-app.post('/login',(req,res) => {
-    const {email, password} = req.body
-    knex('users').select('id','name','email','role_id').where({
-        email,
-        password:md5(password)
-    }).first().then(user => {
-        if(user) {
-            res.status(200).send({accessToken:generateAccessToken({email:user.email}),user})
-        } else {
-            res.status(401).send({error:"authentication failed"})
-        }
-    })
-})
-
-app.get('/doctors', authenticateToken, (req,res) => {
-    knex('users').select('id','name','email','phone_no','role_id').where({
-        role_id:2
-    }).then(data => {
-        res.status(200).send(data?data:[])
-    })
-})
-
-app.get('/doctors/:id', authenticateToken, (req,res) => {
-    const { id } = req.params
-    knex('users').select('id','name','email','phone_no','role_id').where({
-        role_id:2,
-        id
-    }).first().then(data => {
-        res.status(200).send(data?data:{})
-    })
-})
-
+// starting the server for the app to listen on
 app.listen(PORT, () => {
     console.log('this is good foe now')
 })
