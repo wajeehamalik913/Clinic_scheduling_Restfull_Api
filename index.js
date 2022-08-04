@@ -27,38 +27,7 @@ const swaggerJsDoc = require('swagger-jsdoc') //reads JSDoc-annotated source cod
 
 const PORT = process.env.PORT | 8080
 
-// configuration for @openapi (or @swagger) 
-// const options = {
-// 	definition: {
-// 		openapi: "3.0.0",
-        
-// 		info: {
-// 			title: "Clinic Rest API",
-// 			version: "1.0.0",
-// 			description: "Clinic Scheduling Rest API",
-// 		},
-// 		servers: [
-// 			{
-// 				url: "http://localhost:8080", //web server running
-// 			},
-// 		],
-//         components:{
-//             securitySchemes:{
-//                 bearerAuth:{
-//                     type: 'http',
-//                     scheme: 'bearer',
-//                     bearerFormat: 'JWT'
-//                 }
-//             }
-//         },
-//         security:[{
 
-//         }]
-        
-// 	},
-                   
-// 	apis: ["./routes/*.js"], //path to file containing @swagger annotations
-// };
 
 const options = {
     swaggerDefinition: {
@@ -110,13 +79,16 @@ app.use('',authApi)
  * Configuration of MySql database using knex 
  */
 const knex = require('knex')({
-    client: 'mysql2',
+    client: 'mssql',
     connection: {
-      host : 'localhost',
-      port : 3306,
-      user : 'root',
-      password : '',
-      database : 'clinic_scheduling_db'
+      server : 'clinicrestapi.database.windows.net',
+      user : 'rest_api',
+      password : 'Clinical123',
+      options: {
+          port: 1433,
+          database : 'Clinic_Api_DB',
+          encrypt: true  // mandatory for microsoft azure sql server
+      }
     }
   });
 app.knex=knex
