@@ -82,7 +82,7 @@ const knex = require('knex')({
     client: 'mssql',
     connection: {
       server : 'clinicrestapi.database.windows.net',
-      user : 'rest_api',
+      user : 'rest_api@clinicrestapi',
       password : 'Clinical123',
       options: {
           port: 1433,
