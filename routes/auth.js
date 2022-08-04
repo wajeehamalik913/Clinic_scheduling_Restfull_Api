@@ -1,3 +1,8 @@
+/*************************************************************************************************
+ * This file auth.js containsall the routes to manage the authentication apis. It handles requests
+ * like registering user and login.
+ *************************************************************************************************/
+
 require('md5')
 const express = require('express')
 const md5 = require('md5')
@@ -80,11 +85,39 @@ router.post('/token', (req,res) => {
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/User'
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   name:
+ *                      type: string
+ *                      description: name of user
+ *                   email:
+ *                      type: string
+ *                      description: email of user
+ *                   password:
+ *                      type: string
+ *                      description: Password of user
+ *                   Phone_no:
+ *                      type: integer
+ *                      description: Phone number of user
+ *                   role_id:
+ *                      type: integer
+ *                      description: Role Id of user 1 is Admin 2 is Doctor 3 is Patient
  *     responses:
  *       200:
  *         description: The User was successfully registered
- *        
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *                 type: object
+ *                 properties:
+ *                   accessToken:
+ *                      type: string
+ *                      description: access token for authurization
  *       500:
  *         description: Some server error
  */
@@ -131,10 +164,30 @@ router.post('/register',(req,res) => {
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/User'
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   email:
+ *                      type: string
+ *                      description: email of user
+ *                   password:
+ *                      type: string
+ *                      description: Password of user
  *     responses:
  *       200:
  *         description: The User was successfully loggedin
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *                 type: object
+ *                 properties:
+ *                   accessToken:
+ *                      type: string
+ *                      description: access token for authurization
  *        
  *       500:
  *         description: Some server error

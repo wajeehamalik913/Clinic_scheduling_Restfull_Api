@@ -1,5 +1,5 @@
 /*************************************************************************************************
- * This file Index.js is the entry point of the application. It contains all the initialization of 
+ * This file index.js is the entry point of the application. It contains all the initialization of 
  * variables like env, routes ,app. It also have all the configuration of Mysql and server.
  *************************************************************************************************/
 
@@ -28,23 +28,68 @@ const swaggerJsDoc = require('swagger-jsdoc') //reads JSDoc-annotated source cod
 const PORT = process.env.PORT | 8080
 
 // configuration for @openapi (or @swagger) 
-const options = {
-	definition: {
-		openapi: "3.0.0",
-		info: {
-			title: "Clinic Rest API",
-			version: "1.0.0",
-			description: "Clinic Scheduling Rest API",
-		},
-		servers: [
-			{
-				url: "http://localhost:8080", //web server running
-			},
-		],
-	},
-	apis: ["./routes/*.js"], //path to file containing @swagger annotations
-};
+// const options = {
+// 	definition: {
+// 		openapi: "3.0.0",
+        
+// 		info: {
+// 			title: "Clinic Rest API",
+// 			version: "1.0.0",
+// 			description: "Clinic Scheduling Rest API",
+// 		},
+// 		servers: [
+// 			{
+// 				url: "http://localhost:8080", //web server running
+// 			},
+// 		],
+//         components:{
+//             securitySchemes:{
+//                 bearerAuth:{
+//                     type: 'http',
+//                     scheme: 'bearer',
+//                     bearerFormat: 'JWT'
+//                 }
+//             }
+//         },
+//         security:[{
 
+//         }]
+        
+// 	},
+                   
+// 	apis: ["./routes/*.js"], //path to file containing @swagger annotations
+// };
+
+const options = {
+    swaggerDefinition: {
+      openapi: "3.0.0",
+      info: {
+        title: "Clinic Rest API",
+        version: "1.0.0",
+        description: "Clinic Scheduling Rest API",
+        },
+      servers: [
+        {
+          url: "http://localhost:8080",
+        },
+      ],
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: "http",
+            scheme: "bearer",
+            bearerFormat: "JWT",
+          },
+        },
+      },
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+    },
+    apis: ["./routes/*.js"],
+  };
 const specs = swaggerJsDoc(options); //specs will be swagger specification.
 
 const app = express();

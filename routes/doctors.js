@@ -1,7 +1,11 @@
+/*************************************************************************************************
+ * This file doctors.js contains all the routes to manage the doctors apis. It handles requests
+ * like view all doctors, specific doctors, slots of doctors, their availibility and doctors with 
+ * most appointments and 6+ hours.
+ *************************************************************************************************/
+
 const express = require('express')
-
 const {authenticateToken}= require('../JWT_Auth')
-
 const router=express.Router()
 
 /**
@@ -47,22 +51,107 @@ const router=express.Router()
   *   description: Doctors managing Rest API
   */
 
+
 /**
-  * @swagger
-  * tags:
-  *   name: Appointments
-  *   description: Appointments managing Rest API
-  */
+ * @swagger
+ * /doctors/{doctor_id}/slots:
+ *   get:
+ *     summary: Get the all available s;lots of doctor
+ *     tags: [Doctors]
+ *     parameters:
+ *       - in: path
+ *         name: doctor_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The doctor id
+ *     responses:
+ *       200:
+ *         description: all slots available found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: integer
+ */
 
-router.get('/:doctor_id/slots',(req,res)=>{
-    req.app.knex('users').where({
-        email:res.authenticatedEmail.email
-    }).select('role_id').first().then(({role_id}) => {
-        if(role_id === 3) {
-
+router.get('/:doctor_id/slots',authenticateToken,(req,res)=>{
+    const { doctor_id } = req.params
+    req.app.knex('appointments').select().where({
+        doctor_id
+    }).then((appointments) => {
+        let availableSlots=[];
+        let i=0;
+        let x=0;
+        let bookedSlots=[]
+        let index = 0;
+        while(appointments[index]) {
+            for(i=appointments[index].slot_id;i<=appointments[index].slot_id+appointments[index].total_slots-1;i++){
+                bookedSlots[x]=i
+                x++;
+            }
+            index++
         }
+        let y=0;
+        let slots=1
+        for(let w=0;w<bookedSlots.length;w++){
+            for(slots ;slots<=32;slots++){
+                console.log(slots)
+                if(slots===bookedSlots[w]){
+                    console.log(bookedSlots[w],'======',slots)
+                    slots++
+                    break;
+                }
+                else{
+                    availableSlots[y]=slots
+                    y++
+                }
+                  
+            }
+            
+        }
+        for(slots ;slots<=32;slots++){
+            availableSlots[y]=slots
+                    y++
+        }
+        return res.status(200).send({availableSlots})
+        
     })
 })
+
+
+/**
+ * @swagger
+ * /doctors/availability:
+ *   get:
+ *     summary: Get the available Doctors 
+ *     tags: [Doctors]
+ *     responses:
+ *       200:
+ *         description: available doctors found
+ *         content:
+ *           application/json:
+ *             schema:
+ *                 type: object
+ *                 properties:
+ *                   name:
+ *                      type: string
+ *                      description: name of doctor with 6+ hours
+ *                   email:
+ *                      type: string
+ *                      description: email of doctor
+ *                   Phone_no:
+ *                      type: int
+ *                      description: Phone number of available doctors
+ *                   slots_available:
+ *                      type: int 
+ *                      description: Number of slots avialable
+ *       404:
+ *         description: No doctor is available
+ */
+
+
 router.get('/availibility',authenticateToken,(req,res)=>{
     req.app.knex('users').where({
         email:res.authenticatedEmail.email
@@ -103,7 +192,35 @@ router.get('/availibility',authenticateToken,(req,res)=>{
                 }
             })
 })
-router.get('/mostAppointments',(req,res)=>{
+/**
+ * @swagger
+ * /doctors/mostAppointments:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: Get the Doctor who has maximum appointments 
+ *     tags: [Doctors]
+ *     responses:
+ *       200:
+ *         description: The doctors with maximum hours found
+ *         content:
+ *           application/json:
+ *             schema:
+ *                 type: object
+ *                 properties:
+ *                   max_appointments:
+ *                      type: int
+ *                      description: maximum number of appointments
+ *                   doctor_id:
+ *                      type: int
+ *                      description: Id of doctor
+ *                   name:
+ *                      type: string
+ *                      description: Name of doctor
+ *           
+ */
+
+router.get('/mostAppointments',authenticateToken,(req,res)=>{
     req.app.knex('users').where({
         email:res.authenticatedEmail.email
     }).select('role_id').first().then(({role_id}) => {
@@ -112,15 +229,54 @@ router.get('/mostAppointments',(req,res)=>{
             date = date.getFullYear()+'-'+("0" + (date.getMonth() + 1)).slice(-2)+'-'+("0" + date.getDate()).slice(-2)
             req.app.knex('doctor_schedule').where({
                 date
-            }).max('total_appointments as total_appointments').column('doctor_id').join('users','users.id','=','doctor_schedule.doctor_id')
+            }).max('total_appointments as Maximum_appointments').column('doctor_id').join('users','users.id','=','doctor_schedule.doctor_id')
             .select('users.name').then((schedule) => {
-                res.status(200).send(schedule)
+                return res.status(200).send(schedule)
             })
+        }
+        else{
+            return res.sendStatus(400)  
         }
     })
 })
 
-router.get('/minHours',(req,res)=>{
+/**
+ * @swagger
+ * /doctors/minHours:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     summary: Get the Doctor who has appointments min 6h and more
+ *     tags: [Doctors]
+ *     responses:
+ *       200:
+ *         description: The doctors with 6+ hours found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   name:
+ *                      type: string
+ *                      description: name of doctor with 6+ hours
+ *                   id:
+ *                      type: int
+ *                      description: Id of doctor
+ *                   slots_booked:
+ *                      type: int
+ *                      description: Number of slots booked
+ *                   booked_hours:
+ *                      type: string
+ *                      description: Hours tthats booked
+ *                   
+ *       404:
+ *         description: No doctors have more than 6 hours appointments
+ *           
+ */
+
+router.get('/minHours',authenticateToken,(req,res)=>{
     req.app.knex('users').where({
         email:res.authenticatedEmail.email
     }).select('role_id').first().then(({role_id}) => {
@@ -128,14 +284,20 @@ router.get('/minHours',(req,res)=>{
             let date = new Date();
             date = date.getFullYear()+'-'+("0" + (date.getMonth() + 1)).slice(-2)+'-'+("0" + date.getDate()).slice(-2)
             req.app.knex('doctor_schedule').where({
-                date
+                
             }).andWhere('slots_booked','>',23).join('users','users.id','=','doctor_schedule.doctor_id')
             .select('users.name','users.id','doctor_schedule.slots_booked').then((doctors) => {
+                if(!doctors){
+                    return res.status(404).send({error:"No doctors have more than 6 hours appointments"})
+                }
                 for (let index = 0; index < doctors.length; index++) {
                     doctors[index].booked_hours = Math.trunc(doctors[index].slots_booked/4)+':'+(doctors[index].slots_booked%4)*15
                 }
-                res.status(200).send(doctors)
+                return res.status(200).send(doctors)
             })
+        }
+        else{
+            return res.sendStatus(400)   
         }
     })
 })
@@ -171,9 +333,9 @@ router.get('/minHours',(req,res)=>{
         id
     }).first().then(data => {
         if(!data){
-            res.sendStatus(404)
+            return res.sendStatus(404)
         }
-        res.status(200).send(data?data:{})
+        return res.status(200).send(data?data:{})
     })
 })
 
@@ -197,7 +359,7 @@ router.get('/minHours',(req,res)=>{
     req.app.knex('users').select('id','name','email','phone_no','role_id').where({
         role_id:2
     }).then(data => {
-        res.status(200).send(data?data:[])
+        return res.status(200).send(data?data:[])
     })
 })
 

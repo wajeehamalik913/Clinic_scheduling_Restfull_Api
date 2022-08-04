@@ -1,3 +1,8 @@
+/*************************************************************************************************
+ * This file index.js is the entry point of the application. It contains all the initialization of 
+ * variables like env, routes ,app. It also have all the configuration of Mysql and server.
+ *************************************************************************************************/
+
 const jwt = require('jsonwebtoken')
 
 const authenticateToken = (req,res,next) => {
