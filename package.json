@@ -2,9 +2,9 @@
   "name": "clinic_scheduling_restfull_api",
   "version": "1.0.0",
   "description": "\"# Clinic_scheduling_Restfull_Api\"",
-  
+  "main":"index.js"
   "scripts": {
-    "start": "node index.js"
+    "start": "node index"
   },
   "keywords": [],
   "author": "",
