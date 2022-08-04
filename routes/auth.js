@@ -1,9 +1,10 @@
+require('md5')
 /*************************************************************************************************
  * This file auth.js containsall the routes to manage the authentication apis. It handles requests
  * like registering user and login.
  *************************************************************************************************/
 
-require('md5')
+
 const express = require('express')
 const md5 = require('md5')
 const router=express.Router()
@@ -164,16 +165,13 @@ router.post('/register',(req,res) => {
  *       content:
  *         application/json:
  *           schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   email:
- *                      type: string
- *                      description: email of user
- *                   password:
- *                      type: string
- *                      description: Password of user
+ *               properties:
+ *                 email:
+ *                   type: string
+ *                   description: email of user
+ *                 password:
+ *                   type: string
+ *                   description: Password of user
  *     responses:
  *       200:
  *         description: The User was successfully loggedin
