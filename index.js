@@ -110,16 +110,13 @@ app.use('',authApi)
  * Configuration of MySql database using knex 
  */
 const knex = require('knex')({
-    client: 'mssql',
+    client: 'mysql2',
     connection: {
-      server : 'clinicrestapi.database.windows.net',
-      user : 'rest_api',
-      password : 'Clinical123',
-      options: {
-          port: 1433,
-          database : 'Clinic_Api_DB',
-          encrypt: true  // mandatory for microsoft azure sql server
-      }
+      host : 'localhost',
+      port : 3306,
+      user : 'root',
+      password : '',
+      database : 'clinic_scheduling_db'
     }
   });
 app.knex=knex
