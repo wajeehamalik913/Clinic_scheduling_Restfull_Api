@@ -25,7 +25,7 @@ const appointmentApi=require('./routes/appointments') //Routes for managing appo
 const swaggerUI = require('swagger-ui-express') //allows you to serve swagger-ui generated API docs from express
 const swaggerJsDoc = require('swagger-jsdoc') //reads JSDoc-annotated source code and generates an OpenAPI (Swagger) specification.
 
-const PORT = process.env.PORT | 1337
+const PORT = process.env.PORT | 8080
 
 // configuration for @openapi (or @swagger) 
 // const options = {
